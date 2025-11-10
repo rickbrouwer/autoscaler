@@ -200,10 +200,14 @@ spec:
     - --prometheus-address=http://prometheus.default.svc.cluster.local:9090
     - --prometheus-bearer-token=<example-token>
 ```
-
 ### I get recommendations for my single pod replicaset but they are not applied
 
-By default, the [`--min-replicas`](https://github.com/kubernetes/autoscaler/tree/master/pkg/updater/main.go#L44) flag on the updater is set to 2. To change this, you can supply the arg in the [deploys/updater-deployment.yaml](https://github.com/kubernetes/autoscaler/tree/master/deploy/updater-deployment.yaml) file:
+By default, the [`--min-replicas`](https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/pkg/updater/main.go#L61-L62) flag on the updater is set to 2. This means recommendations will not be applied if your ReplicaSet runs fewer than two pods. In the logs, you may see messages like:  
+```
+"Too few replicas" kind="ReplicaSet" object="example/my-deployment-95979c9b4" livePods=1 requiredPods=2 globalMinReplicas=2
+```
+
+To allow scaling recommendations for single-pod workloads, set the flag to 1 in your deployment:
 
 ```yaml
 spec:
@@ -214,8 +218,7 @@ spec:
     - "--v=4"
     - "--stderrthreshold=info"
 ```
-
-and then deploy it manually if your vpa is already configured.
+Then redeploy the updater if your VPA is already configured.
 
 ### Can I run the VPA in an HA configuration?
 
